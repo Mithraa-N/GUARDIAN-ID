@@ -83,19 +83,19 @@ const Dashboard = () => {
             <ProfileTab profile={profile} onUpdate={setProfile} />
           </TabsContent>
           <TabsContent value="documents">
-            <DocumentsTab documents={profile.documents} />
+            <DocumentsTab profile={profile} onUpdate={setProfile} />
           </TabsContent>
           <TabsContent value="cases">
-            <CaseTrackerTab />
+            <CaseTrackerTab profile={profile} onUpdate={setProfile} />
           </TabsContent>
           <TabsContent value="evidence">
-            <EvidenceLockerTab />
+            <EvidenceLockerTab profile={profile} onUpdate={setProfile} />
           </TabsContent>
           <TabsContent value="qr">
             <QRTab profile={profile} />
           </TabsContent>
           <TabsContent value="deadman">
-            <DeadManSwitchTab />
+            <DeadManSwitchTab profile={profile} onUpdate={setProfile} />
           </TabsContent>
           <TabsContent value="log">
             <AccessLogTab logs={accessLog} />

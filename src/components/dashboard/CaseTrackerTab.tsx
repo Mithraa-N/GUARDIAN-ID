@@ -15,38 +15,12 @@ interface CaseEntry {
   description: string;
 }
 
-const DEMO_CASES: CaseEntry[] = [
-  {
-    id: "case-1",
-    title: "Property Dispute – 42 Oak Avenue",
-    caseNumber: "CIV-2025-04821",
-    court: "District Civil Court, Metro Division",
-    status: "Active",
-    nextHearing: "2026-03-18",
-    filedDate: "2025-06-12",
-    description: "Property boundary dispute with neighboring owner. Surveyor report submitted. Awaiting court-appointed mediator.",
-  },
-  {
-    id: "case-2",
-    title: "Insurance Claim – Vehicle Accident",
-    caseNumber: "INS-2025-11293",
-    court: "Consumer Dispute Forum",
-    status: "Pending",
-    nextHearing: "2026-04-05",
-    filedDate: "2025-09-20",
-    description: "Claim for damages following vehicle collision. Insurance company disputed coverage amount. Evidence submitted.",
-  },
-  {
-    id: "case-3",
-    title: "Employment Contract Review",
-    caseNumber: "LAB-2024-07654",
-    court: "Labour Tribunal",
-    status: "Closed",
-    nextHearing: "",
-    filedDate: "2024-03-10",
-    description: "Non-compete clause challenge. Resolved in favor with modified terms. Case closed December 2024.",
-  },
-];
+import type { LegalProfile } from "@/hooks/useDemoData";
+
+interface CaseTrackerTabProps {
+  profile: LegalProfile;
+  onUpdate: (profile: LegalProfile) => void;
+}
 
 const statusColors: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700",
@@ -55,8 +29,29 @@ const statusColors: Record<string, string> = {
   Appeal: "bg-red-100 text-red-700",
 };
 
-const CaseTrackerTab = () => {
+const CaseTrackerTab = ({ profile, onUpdate }: CaseTrackerTabProps) => {
   const [expandedCase, setExpandedCase] = useState<string | null>(null);
+  const cases = profile.cases || [];
+
+  const handleAddCase = () => {
+    const title = prompt("Enter Case Title (e.g., Property Dispute):");
+    if (!title) return;
+    const caseNumber = prompt("Enter Case Number:");
+    const court = prompt("Enter Court Name:");
+
+    const newCase = {
+      id: `case-${Date.now()}`,
+      title,
+      caseNumber: caseNumber || "Pending",
+      court: court || "TBD",
+      status: "Active",
+      nextHearing: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 14 days from now
+      filedDate: new Date().toISOString().split('T')[0],
+      description: "Newly added case.",
+    };
+    onUpdate({ ...profile, cases: [...cases, newCase] });
+    toast.success("Case added to tracker");
+  };
 
   const toggleCase = (id: string) => {
     setExpandedCase(expandedCase === id ? null : id);
@@ -76,14 +71,15 @@ const CaseTrackerTab = () => {
           variant="outline"
           size="sm"
           className="gap-2"
-          onClick={() => toast.info("Case creation requires backend integration")}
+          onClick={handleAddCase}
         >
           <Plus className="w-4 h-4" /> Add Case
         </Button>
       </div>
 
       <div className="space-y-3">
-        {DEMO_CASES.map((c) => {
+        {cases.length === 0 && <p className="text-sm text-muted-foreground">No cases tracked yet.</p>}
+        {cases.map((c: any) => {
           const days = daysUntil(c.nextHearing);
           const isExpanded = expandedCase === c.id;
 

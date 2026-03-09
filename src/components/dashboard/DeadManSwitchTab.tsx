@@ -7,6 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
+import type { LegalProfile } from "@/hooks/useDemoData";
+
 interface Beneficiary {
   id: string;
   name: string;
@@ -14,15 +16,30 @@ interface Beneficiary {
   documents: string[];
 }
 
-const DEMO_BENEFICIARIES: Beneficiary[] = [
-  { id: "ben-1", name: "Margaret Mitchell", email: "margaret@email.com", documents: ["Will", "Insurance"] },
-  { id: "ben-2", name: "Robert J. Mitchell", email: "robert@email.com", documents: ["Will", "Property Deed"] },
-];
+interface DeadManSwitchTabProps {
+  profile: LegalProfile;
+  onUpdate: (profile: LegalProfile) => void;
+}
 
-const DeadManSwitchTab = () => {
+const DeadManSwitchTab = ({ profile, onUpdate }: DeadManSwitchTabProps) => {
   const [enabled, setEnabled] = useState(true);
   const [inactivityDays, setInactivityDays] = useState("90");
-  const [beneficiaries] = useState(DEMO_BENEFICIARIES);
+  const beneficiaries = profile.beneficiaries || [];
+
+  const handleAddBeneficiary = () => {
+    const name = prompt("Enter Beneficiary Name:");
+    if (!name) return;
+    const email = prompt("Enter Beneficiary Email:");
+
+    const newBeneficiary = {
+      id: `ben-${Date.now()}`,
+      name,
+      email: email || "unknown@email.com",
+      documents: ["All Default Documents"],
+    };
+    onUpdate({ ...profile, beneficiaries: [...beneficiaries, newBeneficiary] });
+    toast.success("Beneficiary added");
+  };
 
   const handleSave = () => {
     toast.success("Dead-man's switch settings saved");
@@ -103,13 +120,14 @@ const DeadManSwitchTab = () => {
               <Users className="w-5 h-5 text-muted-foreground" />
               <h3 className="text-lg font-heading font-semibold text-foreground">Beneficiaries</h3>
             </div>
-            <Button variant="outline" size="sm" onClick={() => toast.info("Adding beneficiaries requires backend integration")}>
+            <Button variant="outline" size="sm" onClick={handleAddBeneficiary}>
               Add Beneficiary
             </Button>
           </div>
 
           <div className="divide-y divide-border">
-            {beneficiaries.map((b) => (
+            {beneficiaries.length === 0 && <p className="text-sm text-muted-foreground py-4">No beneficiaries added yet.</p>}
+            {beneficiaries.map((b: any) => (
               <div key={b.id} className="py-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-foreground font-body">{b.name}</p>

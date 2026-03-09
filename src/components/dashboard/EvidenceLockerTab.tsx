@@ -14,44 +14,42 @@ interface EvidenceEntry {
   size: string;
 }
 
-const DEMO_EVIDENCE: EvidenceEntry[] = [
-  {
-    id: "ev-1",
-    name: "Property_Boundary_Photo_01.jpg",
-    type: "Photo",
-    timestamp: "2026-02-15T10:32:00Z",
-    hash: "sha256:a3f8b2c9d1e4...7f6a",
-    verified: true,
-    size: "4.2 MB",
-  },
-  {
-    id: "ev-2",
-    name: "Workplace_Incident_Recording.mp4",
-    type: "Video",
-    timestamp: "2026-01-20T14:15:00Z",
-    hash: "sha256:b7d2e4f1a8c3...9e2b",
-    verified: true,
-    size: "28.6 MB",
-  },
-  {
-    id: "ev-3",
-    name: "Contract_Amendment_Unsigned.pdf",
-    type: "Document",
-    timestamp: "2025-12-05T09:45:00Z",
-    hash: "sha256:c1a9f3b7e2d6...4c8f",
-    verified: true,
-    size: "1.8 MB",
-  },
-];
+import type { LegalProfile } from "@/hooks/useDemoData";
 
-const typeIcons = {
+interface EvidenceLockerTabProps {
+  profile: LegalProfile;
+  onUpdate: (profile: LegalProfile) => void;
+}
+
+const typeIcons: Record<string, any> = {
   Photo: Camera,
   Video: Camera,
   Document: FileText,
 };
 
-const EvidenceLockerTab = () => {
-  const [evidence] = useState(DEMO_EVIDENCE);
+const EvidenceLockerTab = ({ profile, onUpdate }: EvidenceLockerTabProps) => {
+  const evidence = profile.evidence || [];
+
+  const handleAddEvidence = () => {
+    const name = prompt("Enter Evidence File Name (e.g., photo.jpg):");
+    if (!name) return;
+    const typeInput = prompt("Enter Type (Photo, Video, Document):") || "Document";
+    const type = ["Photo", "Video", "Document"].includes(typeInput) ? typeInput : "Document";
+
+    const newEvidence = {
+      id: `ev-${Date.now()}`,
+      name,
+      type,
+      timestamp: new Date().toISOString(),
+      hash: "sha256:" + Math.random().toString(36).substring(2, 12),
+      verified: true,
+      size: `${(Math.random() * 20 + 0.1).toFixed(1)} MB`
+    };
+    onUpdate({ ...profile, evidence: [...evidence, newEvidence] });
+    toast.success("Evidence added securely");
+  };
+
+
 
   return (
     <div className="card-elevated p-6 md:p-8 space-y-6">
@@ -61,7 +59,7 @@ const EvidenceLockerTab = () => {
           variant="outline"
           size="sm"
           className="gap-2"
-          onClick={() => toast.info("Evidence upload requires backend integration")}
+          onClick={handleAddEvidence}
         >
           <Upload className="w-4 h-4" /> Upload Evidence
         </Button>
@@ -73,8 +71,9 @@ const EvidenceLockerTab = () => {
       </div>
 
       <div className="divide-y divide-border">
-        {evidence.map((item) => {
-          const Icon = typeIcons[item.type];
+        {evidence.length === 0 && <p className="text-sm text-muted-foreground py-4">No evidence uploaded yet.</p>}
+        {evidence.map((item: any) => {
+          const Icon = typeIcons[item.type] || FileText;
           return (
             <div key={item.id} className="py-4 space-y-2">
               <div className="flex items-center justify-between">

@@ -1,13 +1,32 @@
 import { FileText, Upload, Landmark, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import type { DocumentEntry } from "@/hooks/useDemoData";
+import type { LegalProfile } from "@/hooks/useDemoData";
 
 interface DocumentsTabProps {
-  documents: DocumentEntry[];
+  profile: LegalProfile;
+  onUpdate: (profile: LegalProfile) => void;
 }
 
-const DocumentsTab = ({ documents }: DocumentsTabProps) => {
+const DocumentsTab = ({ profile, onUpdate }: DocumentsTabProps) => {
+  const handleAddDoc = () => {
+    const name = prompt("Enter Document Name (e.g., MyWill.pdf):");
+    if (!name) return;
+    const type = prompt("Enter Document Type (e.g., Will, ID, Contract):") || "General";
+
+    const newDoc = {
+      id: `doc-${Date.now()}`,
+      name,
+      type,
+      uploadedAt: new Date().toISOString().split('T')[0],
+      size: `${(Math.random() * 5 + 0.1).toFixed(1)} MB`
+    };
+    onUpdate({ ...profile, documents: [...(profile.documents || []), newDoc] });
+    toast.success("Document added");
+  };
+
+  const documents = profile.documents || [];
+
   return (
     <div className="card-elevated p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -16,7 +35,7 @@ const DocumentsTab = ({ documents }: DocumentsTabProps) => {
           variant="outline"
           size="sm"
           className="gap-2"
-          onClick={() => toast.info("File upload requires backend integration")}
+          onClick={handleAddDoc}
         >
           <Upload className="w-4 h-4" />
           Upload
@@ -46,7 +65,13 @@ const DocumentsTab = ({ documents }: DocumentsTabProps) => {
               variant="ghost"
               size="sm"
               className="text-destructive hover:text-destructive"
-              onClick={() => toast.info("Document deletion requires backend integration")}
+              onClick={() => {
+                onUpdate({
+                  ...profile,
+                  documents: profile.documents.filter(d => d.id !== doc.id)
+                });
+                toast.success("Document removed");
+              }}
             >
               <Trash2 className="w-4 h-4" />
             </Button>

@@ -13,6 +13,9 @@ export interface LegalProfile {
   willExecutorName: string;
   emergencyInstructions: string;
   documents: DocumentEntry[];
+  cases: any[];
+  evidence: any[];
+  beneficiaries: any[];
   qrId: string;
   createdAt: string;
 }
@@ -52,6 +55,33 @@ const DEMO_PROFILE: LegalProfile = {
     { id: "doc-3", name: "Life Insurance Policy.pdf", type: "Insurance", uploadedAt: "2024-02-20", size: "3.8 MB" },
     { id: "doc-4", name: "Property Deed Summary.pdf", type: "Property", uploadedAt: "2024-03-01", size: "1.5 MB" },
   ],
+  cases: [
+    {
+      id: "case-1",
+      title: "Property Dispute – 42 Oak Avenue",
+      caseNumber: "CIV-2025-04821",
+      court: "District Civil Court, Metro Division",
+      status: "Active",
+      nextHearing: "2026-03-18",
+      filedDate: "2025-06-12",
+      description: "Property boundary dispute with neighboring owner. Surveyor report submitted. Awaiting court-appointed mediator.",
+    }
+  ],
+  evidence: [
+    {
+      id: "ev-1",
+      name: "Property_Boundary_Photo_01.jpg",
+      type: "Photo",
+      timestamp: "2026-02-15T10:32:00Z",
+      hash: "sha256:a3f8b2c9d1e4...7f6a",
+      verified: true,
+      size: "4.2 MB",
+    }
+  ],
+  beneficiaries: [
+    { id: "ben-1", name: "Margaret Mitchell", email: "margaret@email.com", documents: ["Will", "Insurance"] },
+    { id: "ben-2", name: "Robert J. Mitchell", email: "robert@email.com", documents: ["Will", "Property Deed"] },
+  ],
   qrId: "ls-7f3a9b2e-4d1c-8e5f-a6b0-3c2d1e4f5a6b",
   createdAt: "2024-01-15",
 };
@@ -64,9 +94,51 @@ const DEMO_ACCESS_LOG: AccessLogEntry[] = [
 ];
 
 export function useDemoData() {
-  const [profile, setProfile] = useState<LegalProfile>(DEMO_PROFILE);
+  const [profile, setProfileState] = useState<LegalProfile>(() => {
+    try {
+      const storedAccount = localStorage.getItem("userAccount");
+      const email = storedAccount ? JSON.parse(storedAccount).email : "guest";
+      const storedProfile = localStorage.getItem(`profile_${email}`);
+      if (storedProfile) {
+        return JSON.parse(storedProfile);
+      }
+    } catch (e) {
+      console.error("Error parsing profile data", e);
+    }
+    return {
+      id: `user-${Date.now()}`,
+      fullName: "",
+      dateOfBirth: "",
+      primaryLawyerName: "",
+      lawyerContactNumber: "",
+      secondaryContactName: "",
+      secondaryContactNumber: "",
+      bailPreferences: "",
+      powerOfAttorneyHolder: "",
+      willExecutorName: "",
+      emergencyInstructions: "",
+      documents: [],
+      cases: [],
+      evidence: [],
+      beneficiaries: [],
+      qrId: `ls-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+  });
+
   const [accessLog] = useState<AccessLogEntry[]>(DEMO_ACCESS_LOG);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const setProfile = (newProfile: LegalProfile) => {
+    setProfileState(newProfile);
+    try {
+      const storedAccount = localStorage.getItem("userAccount");
+      const email = storedAccount ? JSON.parse(storedAccount).email : "guest";
+      localStorage.setItem(`profile_${email}`, JSON.stringify(newProfile));
+    } catch (e) {
+      console.error("Error saving profile", e);
+    }
+  };
 
   return { profile, setProfile, accessLog, isLoggedIn, setIsLoggedIn, demoProfile: DEMO_PROFILE };
 }
